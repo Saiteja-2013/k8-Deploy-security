@@ -1,0 +1,18 @@
+version: 0.2
+phases:
+  pre_build:
+    commands:
+      - export IMAGE_TAG=$(date +%Y%m%d%H%M%S)-$(git rev-parse --short HEAD)
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin YOUR_AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
+      - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+  build:
+    commands:
+      - docker build -t YOUR_ECR_REPO:$IMAGE_TAG .
+      - docker tag YOUR_ECR_REPO:$IMAGE_TAG YOUR_AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/YOUR_ECR_REPO:$IMAGE_TAG
+      - trivy image --exit-code 1 --severity HIGH,CRITICAL YOUR_AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/YOUR_ECR_REPO:$IMAGE_TAG || exit 1
+  post_build:
+    commands:
+      - docker push YOUR_AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/YOUR_ECR_REPO:$IMAGE_TAG
+artifacts:
+  files:
+    - '**/*'

@@ -1,0 +1,15 @@
+version: 0.2
+phases:
+  install:
+    commands:
+      - aws eks update-kubeconfig --region us-east-1 --name YOUR_CLUSTER_NAME
+  pre_build:
+    commands:
+      - chmod +x vault/vault-init.sh && ./vault/vault-init.sh
+  build:
+    commands:
+      - kubectl apply -f k8s/secrets.yaml  # Apply secrets
+      - kubectl apply -f k8s/deployment.yaml
+      - kubectl apply -f k8s/service.yaml
+      - kubectl apply -f k8s/rbac.yaml
+      - kubectl apply -f k8s/network-policy.yaml

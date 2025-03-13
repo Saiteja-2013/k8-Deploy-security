@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  CodePipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: SecureImageBuildAndDeployPipeline
+      RoleArn: arn:aws:iam::YOUR_ACCOUNT_ID:role/CodePipelineRole
+      ArtifactStore:
+        Type: S3
+        Location: YOUR_S3_BUCKET
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: SourceAction
+              ActionTypeId:
+                Category: Source
+                Owner: ThirdParty
+                Provider: GitHub
+                Version: '1'
+              OutputArtifacts:
+                - Name: SourceOutput
+              Configuration:
+                Owner: YOUR_GITHUB_USERNAME
+                Repo: YOUR_REPO_NAME
+                Branch: main
+                OAuthToken: YOUR_GITHUB_TOKEN
+        - Name: Build
+          Actions:
+            - Name: BuildAndScan
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              InputArtifacts:
+                - Name: SourceOutput
+              OutputArtifacts:
+                - Name: BuildOutput
+              Configuration:
+                ProjectName: SecureBuildAndScanProject
+        - Name: Deploy
+          Actions:
+            - Name: DeployToKubernetes
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              InputArtifacts:
+                - Name: BuildOutput
+              Configuration:
+                ProjectName: DeployToK8sProject

@@ -1,1 +1,5 @@
-
+flask==2.0.3
+requests==2.26.0
+pyyaml==6.0
+boto3==1.24.4
+vault-python==1.1.1
